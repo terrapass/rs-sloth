@@ -17,24 +17,24 @@ const EXPECT_EVALUATOR_STILL_PRESENT: &str = "evaluator must still be present at
 //
 
 //
-// LazyEval<T, Eval>
+// Lazy<T, Eval>
 //
 
-pub struct LazyEval<T, Eval>
+pub struct Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
     evaluator_cell: Cell<Option<Eval>>,
     value_cell:     RefCell<Option<T>>
 }
 
-impl<T, Eval> LazyEval<T, Eval>
+impl<T, Eval> Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
     //
     // Interface
     //
 
-    pub fn from(evaluator: Eval) -> Self {
+    pub fn new(evaluator: Eval) -> Self {
         Self{
             evaluator_cell: Cell::new(Some(evaluator)),
             value_cell:     RefCell::new(None)
@@ -55,7 +55,6 @@ impl<T, Eval> LazyEval<T, Eval>
         )
     }
 
-    #[allow(dead_code)]
     pub fn value_mut(&mut self) -> RefMut<'_, T> {
         let mut value_cell_mut = self.value_cell.borrow_mut();
 
@@ -85,7 +84,7 @@ impl<T, Eval> LazyEval<T, Eval>
     }
 }
 
-impl<T, Eval> LazyEval<T, Eval>
+impl<T, Eval> Lazy<T, Eval>
     where T:    Copy,
           Eval: FnOnce() -> T
 {
@@ -112,8 +111,8 @@ mod tests {
     //
 
     #[test]
-    fn lazy_eval_int_value_retrieval() {
-        let mut lazy_value = LazyEval::from(|| 5 + 5);
+    fn lazy_int_value_retrieval() {
+        let mut lazy_value = Lazy::new(|| 5 + 5);
 
         assert_eq!(lazy_value.value(), 10);
         assert_eq!(*lazy_value.value_ref(), 10);
@@ -121,8 +120,8 @@ mod tests {
     }
 
     #[test]
-    fn lazy_eval_int_value_modification() {
-        let mut lazy_value = LazyEval::from(|| -1);
+    fn lazy_int_value_modification() {
+        let mut lazy_value = Lazy::new(|| -1);
 
         *lazy_value.value_mut() = 42;
 
@@ -132,8 +131,8 @@ mod tests {
     }
 
     #[test]
-    fn lazy_eval_str_value_retrieval() {
-        let mut lazy_value = LazyEval::from(|| "some str");
+    fn lazy_str_value_retrieval() {
+        let mut lazy_value = Lazy::new(|| "some str");
 
         assert_eq!(lazy_value.value(), "some str");
         assert_eq!(*lazy_value.value_ref(), "some str");
@@ -141,8 +140,8 @@ mod tests {
     }
 
     #[test]
-    fn lazy_eval_str_value_modification() {
-        let mut lazy_value = LazyEval::from(|| "initial str");
+    fn lazy_str_value_modification() {
+        let mut lazy_value = Lazy::new(|| "initial str");
 
         *lazy_value.value_mut() = "new str";
 
@@ -152,16 +151,16 @@ mod tests {
     }
 
     #[test]
-    fn lazy_eval_string_value_retrieval() {
-        let mut lazy_value = LazyEval::from(|| "some string".to_string());
+    fn lazy_string_value_retrieval() {
+        let mut lazy_value = Lazy::new(|| "some string".to_string());
 
         assert_eq!(*lazy_value.value_ref(), "some string".to_string());
         assert_eq!(*lazy_value.value_mut(), "some string".to_string());
     }
 
     #[test]
-    fn lazy_eval_string_value_modification() {
-        let mut lazy_value = LazyEval::from(|| "initial string".to_string());
+    fn lazy_string_value_modification() {
+        let mut lazy_value = Lazy::new(|| "initial string".to_string());
 
         *lazy_value.value_mut() = "new string".to_string();
 
@@ -171,10 +170,10 @@ mod tests {
 
     #[test]
     #[allow(unused_variables)]
-    fn lazy_eval_evaluator_never_called_if_unused() {
+    fn lazy_evaluator_never_called_if_unused() {
         let mut evaluator_call_count = 0;
 
-        let lazy_value = LazyEval::from(|| {
+        let lazy_value = Lazy::new(|| {
             evaluator_call_count += 1;
             25
         });
@@ -183,10 +182,10 @@ mod tests {
     }
 
     #[test]
-    fn lazy_eval_evaluator_called_once() {
+    fn lazy_evaluator_called_once() {
         let mut evaluator_call_count = 0;
 
-        let mut lazy_value = LazyEval::from(|| {
+        let mut lazy_value = Lazy::new(|| {
             evaluator_call_count += 1;
             150
         });
