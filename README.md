@@ -1,4 +1,5 @@
 [![crates.io](http://meritbadge.herokuapp.com/sloth)](https://crates.io/crates/sloth)
+[![docs.rs](https://docs.rs/sloth/badge.svg)](https://docs.rs/sloth)
 [![Build Status](https://travis-ci.org/terrapass/rs-sloth.svg?branch=master)](https://travis-ci.org/terrapass/rs-sloth)
 
 # sloth
@@ -50,4 +51,4 @@ if must_use_string {
 
 ```
 
-Current version: 0.1.0
+Current version: 0.1.1
