@@ -170,6 +170,19 @@ mod tests {
     }
 
     #[test]
+    #[allow(unused_variables)]
+    fn lazy_eval_evaluator_never_called_if_unused() {
+        let mut evaluator_call_count = 0;
+
+        let lazy_value = LazyEval::from(|| {
+            evaluator_call_count += 1;
+            25
+        });
+
+        assert_eq!(evaluator_call_count, 0);
+    }
+
+    #[test]
     fn lazy_eval_evaluator_called_once() {
         let mut evaluator_call_count = 0;
 
