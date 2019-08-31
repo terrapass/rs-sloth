@@ -1,3 +1,50 @@
+//! This crate provides a generic `Lazy<T, Eval>` wrapper struct for lazy initialization.
+//! It can be used for expensive-to-calculate `T` values to ensure that the evaluation logic runs
+//! only once and only if needed.
+//! 
+//! For example:
+//! ```
+//! use sloth::Lazy;
+//! 
+//! fn get_expensive_string() -> String {
+//!     // do something expensive here to obtain the result,
+//!     // such as read and process file contents
+//!
+//!     String::from("some expensive string we got from a file or something")
+//! }
+//! 
+//! fn get_expensive_i32() -> i32 {
+//!     // do something expensive here to calculate the result,
+//!     // such as build a supercomputer and wait 7.5 million years
+//!
+//!     42
+//! }
+//! 
+//! let lazy_string = Lazy::new(get_expensive_string);
+//! let lazy_i32 = Lazy::new(get_expensive_i32);
+//! 
+//! //...
+//! 
+//! let must_use_string = true;
+//! 
+//! //...
+//! 
+//! if must_use_string {
+//!     println!("Expensive string is: {}", *lazy_string.value_ref());
+//!     println!("It has length: {}", (*lazy_string.value_ref()).len());
+//!
+//!     // get_expensive_string() has been called only once,
+//!     // get_expensive_i32() has not been called at all
+//! } else {
+//!     println!("Expensive int is: {}", lazy_i32.value());
+//!     println!("It is{} divisible by 6", if lazy_i32.value() % 6 == 0 { "" } else { " not" });
+//! 
+//!     // get_expensive_string() has not been called,
+//!     // get_expensive_i32() has been called only once
+//! }
+//! 
+//! ```
+
 use std::cell::{
     Cell,
     RefCell,
@@ -20,6 +67,47 @@ const EXPECT_EVALUATOR_STILL_PRESENT: &str = "evaluator must still be present at
 // Lazy<T, Eval>
 //
 
+/// Represents a value of type `T`, lazily evaluated using a parameterless
+/// function or a closure (`FnOnce() -> T`) passed to `Lazy::new()`.
+/// 
+/// The value within may be referenced using `value_ref()` or `value_mut()` methods.
+/// For types implementing Copy, a copy of the contained value may be obtained using `value()`.
+/// 
+/// The evaluator function will not be called more than once.
+/// If none of `value()`, `value_ref()` and `value_mut()` methods are used,
+/// the evaluator function will never be called at all.
+/// 
+/// # Examples
+/// Lazily converting a string to upper case:
+/// ```
+/// use sloth::Lazy;
+/// 
+/// let some_str = "the quick brown fox jumps over the lazy dog";
+/// let lazy_upper_str = Lazy::new(|| some_str.to_uppercase());
+/// 
+/// assert_eq!(
+///     *lazy_upper_str.value_ref(),
+///     "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG"
+/// );
+/// ```
+/// Regardless of how many times the value is accessed, the evaluator function
+/// is only called once:
+/// ```
+/// use sloth::Lazy;
+/// 
+/// let mut evaluator_called_times = 0;
+/// 
+/// let lazy_value = Lazy::new(|| {
+///     evaluator_called_times += 1;
+///     25
+/// });
+/// 
+/// assert_eq!(lazy_value.value(), 25);
+/// 
+/// let another_value = lazy_value.value() + lazy_value.value();
+/// 
+/// assert_eq!(evaluator_called_times, 1);
+/// ```
 pub struct Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
