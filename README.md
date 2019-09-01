@@ -4,7 +4,7 @@
 
 # sloth
 
-This crate provides a generic [`Lazy<T, Eval>`](struct.Lazy.html) wrapper struct for lazy initialization.
+This crate provides a generic [`Lazy<T, Eval>`](https://docs.rs/sloth/0.1.2/sloth/struct.Lazy.html) wrapper struct for lazy initialization.
 It can be used for expensive-to-calculate `T` values to ensure that the evaluation logic runs
 only once and only if needed.
 
