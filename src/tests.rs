@@ -91,3 +91,44 @@ fn lazy_evaluator_called_once() {
 
     assert_eq!(evaluator_call_count, 1);
 }
+
+#[test]
+fn lazy_value_drop_if_used() {
+    let mut was_value_dropped = false;
+
+    {
+        let lazy_value = Lazy::new(|| SomethingDroppable{was_dropped: &mut was_value_dropped});
+
+        lazy_value.value_ref();
+    }
+
+    assert!(was_value_dropped);
+}
+
+#[test]
+#[allow(unused_variables)]
+fn lazy_value_no_drop_if_unused() {
+    let mut was_value_dropped = false;
+
+    {
+        let lazy_value = Lazy::new(|| SomethingDroppable{was_dropped: &mut was_value_dropped});
+    }
+
+    assert!(!was_value_dropped);
+}
+
+//
+// Service types
+//
+
+struct SomethingDroppable<'a> {
+    was_dropped: &'a mut bool
+}
+
+impl Drop for SomethingDroppable<'_> {
+    fn drop(&mut self) {
+        assert!(!*self.was_dropped, "was_dropped must initially be false");
+
+        *self.was_dropped = true;
+    }
+}
