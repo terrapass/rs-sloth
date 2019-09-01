@@ -1,4 +1,4 @@
-//! This crate provides a generic `Lazy<T, Eval>` wrapper struct for lazy initialization.
+//! This crate provides a generic [`Lazy<T, Eval>`](struct.Lazy.html) wrapper struct for lazy initialization.
 //! It can be used for expensive-to-calculate `T` values to ensure that the evaluation logic runs
 //! only once and only if needed.
 //! 
@@ -67,14 +67,18 @@ const EXPECT_EVALUATOR_STILL_PRESENT: &str = "evaluator must still be present at
 // Lazy<T, Eval>
 //
 
-/// Represents a value of type `T`, lazily evaluated using a parameterless
-/// function or a closure (`FnOnce() -> T`) passed to `Lazy::new()`.
+/// Represents a value of some type `T`, lazily evaluated using a parameterless
+/// function or a closure (`FnOnce() -> T`) passed to [`Lazy::new()`](struct.Lazy.html#method.new).
 /// 
-/// The value within may be referenced using `value_ref()` or `value_mut()` methods.
-/// For types implementing Copy, a copy of the contained value may be obtained using `value()`.
+/// The evaluated value may be referenced using [`value_ref()`](struct.Lazy.html#method.value_ref)
+/// or [`value_mut()`](struct.Lazy.html#method.value_mut) methods.
+/// For types implementing `Copy`, a copy of the contained value may be obtained
+/// using [`value()`](struct.Lazy.html#method.value).
 /// 
 /// The evaluator function will not be called more than once.
-/// If none of `value()`, `value_ref()` and `value_mut()` methods are used,
+/// If none of [`value()`](struct.Lazy.html#method.value),
+/// [`value_ref()`](struct.Lazy.html#method.value_ref)
+/// and [`value_mut()`](struct.Lazy.html#method.value_mut) methods are used,
 /// the evaluator function will never be called at all.
 /// 
 /// # Examples
@@ -122,6 +126,14 @@ impl<T, Eval> Lazy<T, Eval>
     // Interface
     //
 
+    /// Constructs a lazy `T` instance, whose value, if needed, will later be
+    /// obtained from `evaluator` and cached.
+    /// 
+    /// `evaluator` will be invoked only the first time any one of
+    /// [`value()`](struct.Lazy.html#method.value),
+    /// [`value_ref()`](struct.Lazy.html#method.value_ref)
+    /// or [`value_mut()`](struct.Lazy.html#method.value_mut)
+    /// methods is called.
     pub fn new(evaluator: Eval) -> Self {
         Self{
             evaluator_cell: Cell::new(Some(evaluator)),
@@ -129,6 +141,10 @@ impl<T, Eval> Lazy<T, Eval>
         }
     }
 
+    /// Immutably borrows the evaluation result.
+    /// 
+    /// This will invoke evaluator function if none of the `value`* methods
+    /// were called earlier.
     pub fn value_ref(&self) -> Ref<'_, T> {
         if self.value_cell.borrow().is_none() {
             *self.value_cell.borrow_mut() = Some(self.evaluate());
@@ -143,6 +159,10 @@ impl<T, Eval> Lazy<T, Eval>
         )
     }
 
+    /// Mutably borrows the evaluation result.
+    /// 
+    /// This will invoke evaluator function if none of the `value`* methods
+    /// were called earlier.
     pub fn value_mut(&mut self) -> RefMut<'_, T> {
         let mut value_cell_mut = self.value_cell.borrow_mut();
 
@@ -176,7 +196,10 @@ impl<T, Eval> Lazy<T, Eval>
     where T:    Copy,
           Eval: FnOnce() -> T
 {
-    #[allow(dead_code)]
+    /// Returns a copy of the evaluation result.
+    /// 
+    /// This will invoke evaluator function if none of the `value`* methods
+    /// were called earlier.
     pub fn value(&self) -> T {
         if self.value_cell.borrow().is_none() {
             *self.value_cell.borrow_mut() = Some(self.evaluate());
