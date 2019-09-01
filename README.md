@@ -50,5 +50,3 @@ if must_use_string {
 }
 
 ```
-
-Current version: 0.1.2
