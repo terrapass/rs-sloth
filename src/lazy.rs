@@ -166,6 +166,7 @@ impl<T, Eval> Lazy<T, Eval>
     /// This will invoke evaluator function if none of the `value`* methods
     /// were called earlier.
     #[must_use]
+    #[deprecated(since = "0.2.0", note = "will be removed in sloth 0.3.0; please use as_ref() or * deref operator instead")]
     pub fn value_ref(&self) -> Ref<'_, T> {
         self.init_once();
 
@@ -183,6 +184,7 @@ impl<T, Eval> Lazy<T, Eval>
     /// This will invoke evaluator function if none of the `value`* methods
     /// were called earlier.
     #[must_use]
+    #[deprecated(since = "0.2.0", note = "will be removed in sloth 0.3.0; please use as_mut() or * deref operator instead")]
     pub fn value_mut(&mut self) -> RefMut<'_, T> {
         self.init_once();
 

@@ -53,6 +53,7 @@ mod lazy;
 
 // Unit tests
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests;
 
 //
