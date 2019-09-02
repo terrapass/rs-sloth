@@ -54,6 +54,16 @@ fn lazy_int_value_modification_deref_mut() {
 }
 
 #[test]
+fn lazy_int_value_modification_borrow_mut() {
+    let mut lazy_value = Lazy::new(|| -1);
+
+    *lazy_value.borrow_mut() = 42;
+
+    lazy_all_ref_assert_eq!(lazy_value, 42);
+    assert_eq!(lazy_value.value(), 42);
+}
+
+#[test]
 fn lazy_str_value_retrieval() {
     let mut lazy_value = Lazy::new(|| "some str");
 
@@ -82,6 +92,16 @@ fn lazy_str_value_modification_deref_mut() {
 }
 
 #[test]
+fn lazy_str_value_modification_borrow_mut() {
+    let mut lazy_value = Lazy::new(|| "initial str");
+
+    *lazy_value.borrow_mut() = "new str";
+
+    lazy_all_ref_assert_eq!(lazy_value, "new str");
+    assert_eq!(lazy_value.value(), "new str");
+}
+
+#[test]
 fn lazy_string_value_retrieval() {
     let mut lazy_value = Lazy::new(|| "some string".to_string());
 
@@ -102,6 +122,15 @@ fn lazy_string_value_modification_deref_mut() {
     let mut lazy_value = Lazy::new(|| "initial string".to_string());
 
     *lazy_value = "new string".to_string();
+
+    lazy_all_ref_assert_eq!(lazy_value, "new string".to_string());
+}
+
+#[test]
+fn lazy_string_value_modification_borrow_mut() {
+    let mut lazy_value = Lazy::new(|| "initial string".to_string());
+
+    *lazy_value.borrow_mut() = "new string".to_string();
 
     lazy_all_ref_assert_eq!(lazy_value, "new string".to_string());
 }
