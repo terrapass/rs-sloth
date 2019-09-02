@@ -207,6 +207,17 @@ impl<T, Eval> Lazy<T, Eval>
         )
     }
 
+    /// Consumes `Lazy` instance and extracts the evaluation result value.
+    ///
+    /// This will invoke evaluator function if none of the `value`* methods
+    /// were called earlier.
+    #[must_use]
+    pub fn unwrap(self) -> T {
+        self.init_once();
+
+        self.value_cell.replace(None).expect(EXPECT_VALUE_CELL_INITIALIZED)
+    }
+
     //
     // Service
     //
