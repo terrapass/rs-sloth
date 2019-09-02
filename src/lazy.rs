@@ -91,8 +91,6 @@ impl<T, Eval> Deref for Lazy<T, Eval>
     type Target = T;
 
     fn deref(&self) -> &T {
-        self.init_once();
-
         self.as_ref_impl()
     }
 }
@@ -101,8 +99,6 @@ impl<T, Eval> DerefMut for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
     fn deref_mut(&mut self) -> &mut T {
-        self.init_once();
-
         self.as_mut_impl()
     }
 }
@@ -111,8 +107,6 @@ impl<T, Eval> AsRef<T> for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
     fn as_ref(&self) -> &T {
-        self.init_once();
-
         self.as_ref_impl()
     }
 }
@@ -121,8 +115,6 @@ impl<T, Eval> AsMut<T> for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
     fn as_mut(&mut self) -> &mut T {
-        self.init_once();
-
         self.as_mut_impl()
     }
 }
@@ -131,8 +123,6 @@ impl<T, Eval> Borrow<T> for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
     fn borrow(&self) -> &T {
-        self.init_once();
-
         self.as_ref_impl()
     }
 }
@@ -141,8 +131,6 @@ impl<T, Eval> BorrowMut<T> for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
     fn borrow_mut(&mut self) -> &mut T {
-        self.init_once();
-
         self.as_mut_impl()
     }
 }
@@ -223,6 +211,8 @@ impl<T, Eval> Lazy<T, Eval>
     //
 
     fn as_ref_impl(&self) -> &T {
+        self.init_once();
+
         unsafe {
             self.value_cell
                 .as_ptr()
@@ -234,6 +224,8 @@ impl<T, Eval> Lazy<T, Eval>
     }
 
     fn as_mut_impl(&mut self) -> &mut T {
+        self.init_once();
+
         unsafe {
             self.value_cell
                 .as_ptr()
