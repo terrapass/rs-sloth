@@ -139,6 +139,7 @@ impl<T, Eval> Lazy<T, Eval>
     /// 
     /// This will invoke evaluator function if none of the `value`* methods
     /// were called earlier.
+    #[must_use]
     pub fn value_ref(&self) -> Ref<'_, T> {
         self.init_once();
 
@@ -155,6 +156,7 @@ impl<T, Eval> Lazy<T, Eval>
     /// 
     /// This will invoke evaluator function if none of the `value`* methods
     /// were called earlier.
+    #[must_use]
     pub fn value_mut(&mut self) -> RefMut<'_, T> {
         self.init_once();
 
@@ -194,6 +196,7 @@ impl<T, Eval> Lazy<T, Eval>
     /// 
     /// This will invoke evaluator function if none of the `value`* methods
     /// were called earlier.
+    #[must_use]
     pub fn value(&self) -> T {
         self.init_once();
 
