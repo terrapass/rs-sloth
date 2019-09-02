@@ -85,7 +85,7 @@ impl<T, Eval> Deref for Lazy<T, Eval>
     fn deref(&self) -> &T {
         self.init_once();
 
-        unsafe { // TODO: Ask on users.rust-lang.org if I'm doing this right :/
+        unsafe {
             self.value_cell
                 .as_ptr()
                 .as_ref()
@@ -99,7 +99,7 @@ impl<T, Eval> Deref for Lazy<T, Eval>
 impl<T, Eval> DerefMut for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
-    fn deref_mut(&mut self) -> &mut T { // TODO: ditto
+    fn deref_mut(&mut self) -> &mut T {
         self.init_once();
 
         unsafe {
