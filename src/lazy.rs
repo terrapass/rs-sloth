@@ -4,6 +4,10 @@ use std::cell::{
     Ref,
     RefMut
 };
+use std::ops::{
+    Deref,
+    DerefMut
+};
 
 //
 // Constants
@@ -11,6 +15,7 @@ use std::cell::{
 
 const EXPECT_VALUE_CELL_INITIALIZED:  &str = "option in value_cell must be initialized at this point";
 const EXPECT_EVALUATOR_STILL_PRESENT: &str = "evaluator must still be present at this point";
+const EXPECT_VALUE_CELL_PTR_NOT_NULL: &str = "value_cell as ptr must not be null";
 
 //
 // Interface
@@ -72,6 +77,42 @@ pub struct Lazy<T, Eval>
     value_cell:     RefCell<Option<T>>
 }
 
+impl<T, Eval> Deref for Lazy<T, Eval>
+    where Eval: FnOnce() -> T
+{
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        self.init_once();
+
+        unsafe { // TODO: Ask on users.rust-lang.org if I'm doing this right :/
+            self.value_cell
+                .as_ptr()
+                .as_ref()
+                .expect(EXPECT_VALUE_CELL_PTR_NOT_NULL)
+                .as_ref()
+                .expect(EXPECT_VALUE_CELL_INITIALIZED)
+        }
+    }
+}
+
+impl<T, Eval> DerefMut for Lazy<T, Eval>
+    where Eval: FnOnce() -> T
+{
+    fn deref_mut(&mut self) -> &mut T { // TODO: ditto
+        self.init_once();
+
+        unsafe {
+            self.value_cell
+                .as_ptr()
+                .as_mut()
+                .expect(EXPECT_VALUE_CELL_PTR_NOT_NULL)
+                .as_mut()
+                .expect(EXPECT_VALUE_CELL_INITIALIZED)
+        }
+    }
+}
+
 impl<T, Eval> Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
@@ -99,9 +140,7 @@ impl<T, Eval> Lazy<T, Eval>
     /// This will invoke evaluator function if none of the `value`* methods
     /// were called earlier.
     pub fn value_ref(&self) -> Ref<'_, T> {
-        if self.value_cell.borrow().is_none() {
-            *self.value_cell.borrow_mut() = Some(self.evaluate());
-        }
+        self.init_once();
 
         // Returns a Ref to the T instance contained within Option<T> referenced by value_cell
         Ref::map(
@@ -117,15 +156,11 @@ impl<T, Eval> Lazy<T, Eval>
     /// This will invoke evaluator function if none of the `value`* methods
     /// were called earlier.
     pub fn value_mut(&mut self) -> RefMut<'_, T> {
-        let mut value_cell_mut = self.value_cell.borrow_mut();
-
-        if value_cell_mut.is_none() {
-            *value_cell_mut = Some(self.evaluate());
-        }
+        self.init_once();
 
         // Returns a RefMut to the T instance contained within Option<T> referenced by value_cell_mut
         RefMut::map(
-            value_cell_mut,
+            self.value_cell.borrow_mut(),
             |value_option| {
                 value_option.as_mut().expect(EXPECT_VALUE_CELL_INITIALIZED)
             }
@@ -135,6 +170,12 @@ impl<T, Eval> Lazy<T, Eval>
     //
     // Service
     //
+
+    fn init_once(&self) {
+        if self.value_cell.borrow().is_none() {
+            *self.value_cell.borrow_mut() = Some(self.evaluate());
+        }
+    }
 
     fn evaluate(&self) -> T {
         let evaluator = self.evaluator_cell
@@ -154,9 +195,7 @@ impl<T, Eval> Lazy<T, Eval>
     /// This will invoke evaluator function if none of the `value`* methods
     /// were called earlier.
     pub fn value(&self) -> T {
-        if self.value_cell.borrow().is_none() {
-            *self.value_cell.borrow_mut() = Some(self.evaluate());
-        }
+        self.init_once();
 
         self.value_cell.borrow().expect(EXPECT_VALUE_CELL_INITIALIZED)
     }
