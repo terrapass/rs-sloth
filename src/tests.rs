@@ -1,5 +1,26 @@
 use super::*;
 
+// use std::borrow::{
+//     Borrow,
+//     BorrowMut
+// };
+
+//
+// Macros
+//
+
+macro_rules! lazy_all_ref_assert_eq {
+    ($lazy_value:expr, $expected:expr) => {
+            assert_eq!(*$lazy_value, $expected);
+            assert_eq!(*$lazy_value.as_ref(), $expected);
+            assert_eq!(*$lazy_value.as_mut(), $expected);
+            assert_eq!(*$lazy_value.value_ref(), $expected);
+            assert_eq!(*$lazy_value.value_mut(), $expected);
+
+            //assert!(is_borrow_eq(&$lazy_value, &$expected));
+    };
+}
+
 //
 // Tests
 //
@@ -8,12 +29,8 @@ use super::*;
 fn lazy_int_value_retrieval() {
     let mut lazy_value = Lazy::new(|| 5 + 5);
 
-    assert_eq!(*lazy_value, 10);
-    assert_eq!(*lazy_value.as_ref(), 10);
-    assert_eq!(*lazy_value.as_mut(), 10);
+    lazy_all_ref_assert_eq!(lazy_value, 10);
     assert_eq!(lazy_value.value(), 10);
-    assert_eq!(*lazy_value.value_ref(), 10);
-    assert_eq!(*lazy_value.value_mut(), 10);
 }
 
 #[test]
@@ -22,12 +39,8 @@ fn lazy_int_value_modification_value_mut() {
 
     *lazy_value.value_mut() = 42;
 
-    assert_eq!(*lazy_value, 42);
-    assert_eq!(*lazy_value.as_ref(), 42);
-    assert_eq!(*lazy_value.as_mut(), 42);
+    lazy_all_ref_assert_eq!(lazy_value, 42);
     assert_eq!(lazy_value.value(), 42);
-    assert_eq!(*lazy_value.value_ref(), 42);
-    assert_eq!(*lazy_value.value_mut(), 42);
 }
 
 #[test]
@@ -36,24 +49,16 @@ fn lazy_int_value_modification_deref_mut() {
 
     *lazy_value = 42;
 
-    assert_eq!(*lazy_value, 42);
-    assert_eq!(*lazy_value.as_ref(), 42);
-    assert_eq!(*lazy_value.as_mut(), 42);
+    lazy_all_ref_assert_eq!(lazy_value, 42);
     assert_eq!(lazy_value.value(), 42);
-    assert_eq!(*lazy_value.value_ref(), 42);
-    assert_eq!(*lazy_value.value_mut(), 42);
 }
 
 #[test]
 fn lazy_str_value_retrieval() {
     let mut lazy_value = Lazy::new(|| "some str");
 
-    assert_eq!(*lazy_value, "some str");
-    assert_eq!(*lazy_value.as_ref(), "some str");
-    assert_eq!(*lazy_value.as_mut(), "some str");
+    lazy_all_ref_assert_eq!(lazy_value, "some str");
     assert_eq!(lazy_value.value(), "some str");
-    assert_eq!(*lazy_value.value_ref(), "some str");
-    assert_eq!(*lazy_value.value_mut(), "some str");
 }
 
 #[test]
@@ -62,12 +67,8 @@ fn lazy_str_value_modification_value_mut() {
 
     *lazy_value.value_mut() = "new str";
 
-    assert_eq!(*lazy_value, "new str");
-    assert_eq!(*lazy_value.as_ref(), "new str");
-    assert_eq!(*lazy_value.as_mut(), "new str");
+    lazy_all_ref_assert_eq!(lazy_value, "new str");
     assert_eq!(lazy_value.value(), "new str");
-    assert_eq!(*lazy_value.value_ref(), "new str");
-    assert_eq!(*lazy_value.value_mut(), "new str");
 }
 
 #[test]
@@ -76,23 +77,15 @@ fn lazy_str_value_modification_deref_mut() {
 
     *lazy_value = "new str";
 
-    assert_eq!(*lazy_value, "new str");
-    assert_eq!(*lazy_value.as_ref(), "new str");
-    assert_eq!(*lazy_value.as_mut(), "new str");
+    lazy_all_ref_assert_eq!(lazy_value, "new str");
     assert_eq!(lazy_value.value(), "new str");
-    assert_eq!(*lazy_value.value_ref(), "new str");
-    assert_eq!(*lazy_value.value_mut(), "new str");
 }
 
 #[test]
 fn lazy_string_value_retrieval() {
     let mut lazy_value = Lazy::new(|| "some string".to_string());
 
-    assert_eq!(*lazy_value, "some string".to_string());
-    assert_eq!(*lazy_value.as_ref(), "some string".to_string());
-    assert_eq!(*lazy_value.as_mut(), "some string".to_string());
-    assert_eq!(*lazy_value.value_ref(), "some string".to_string());
-    assert_eq!(*lazy_value.value_mut(), "some string".to_string());
+    lazy_all_ref_assert_eq!(lazy_value, "some string".to_string());
 }
 
 #[test]
@@ -101,11 +94,7 @@ fn lazy_string_value_modification_value_mut() {
 
     *lazy_value.value_mut() = "new string".to_string();
 
-    assert_eq!(*lazy_value, "new string".to_string());
-    assert_eq!(*lazy_value.as_ref(), "new string".to_string());
-    assert_eq!(*lazy_value.as_mut(), "new string".to_string());
-    assert_eq!(*lazy_value.value_ref(), "new string".to_string());
-    assert_eq!(*lazy_value.value_mut(), "new string".to_string());
+    lazy_all_ref_assert_eq!(lazy_value, "new string".to_string());
 }
 
 #[test]
@@ -114,11 +103,7 @@ fn lazy_string_value_modification_deref_mut() {
 
     *lazy_value = "new string".to_string();
 
-    assert_eq!(*lazy_value, "new string".to_string());
-    assert_eq!(*lazy_value.as_ref(), "new string".to_string());
-    assert_eq!(*lazy_value.as_mut(), "new string".to_string());
-    assert_eq!(*lazy_value.value_ref(), "new string".to_string());
-    assert_eq!(*lazy_value.value_mut(), "new string".to_string());
+    lazy_all_ref_assert_eq!(lazy_value, "new string".to_string());
 }
 
 #[test]
@@ -145,6 +130,10 @@ fn lazy_evaluator_called_once() {
     });
 
     *lazy_value;
+    lazy_value.as_ref();
+    *lazy_value.as_mut() = 150;
+    //let _: i32 = *lazy_value.borrow();
+    //*lazy_value.borrow_mut() = 250;
     lazy_value.value();
     lazy_value.value();
     *lazy_value.value_mut() = 200;
@@ -178,6 +167,17 @@ fn lazy_value_no_drop_if_unused() {
 
     assert!(!was_value_dropped);
 }
+
+//
+// Service
+//
+
+// fn is_borrow_eq<T, Q>(borrowed: &Q, expected: &T) -> bool
+//     where   T: PartialEq,
+//             Q: Borrow<T>
+// {
+//     borrowed.borrow() == expected.borrow()
+// }
 
 //
 // Service types
