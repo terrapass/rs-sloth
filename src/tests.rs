@@ -1,9 +1,9 @@
 use super::*;
 
-// use std::borrow::{
-//     Borrow,
-//     BorrowMut
-// };
+use std::borrow::{
+    Borrow,
+    BorrowMut
+};
 
 //
 // Macros
@@ -17,7 +17,7 @@ macro_rules! lazy_all_ref_assert_eq {
             assert_eq!(*$lazy_value.value_ref(), $expected);
             assert_eq!(*$lazy_value.value_mut(), $expected);
 
-            //assert!(is_borrow_eq(&$lazy_value, &$expected));
+            assert!(is_borrow_eq(&$lazy_value, &$expected));
     };
 }
 
@@ -132,8 +132,8 @@ fn lazy_evaluator_called_once() {
     *lazy_value;
     lazy_value.as_ref();
     *lazy_value.as_mut() = 150;
-    //let _: i32 = *lazy_value.borrow();
-    //*lazy_value.borrow_mut() = 250;
+    let _: i32 = *lazy_value.borrow();
+    *lazy_value.borrow_mut() = 250;
     lazy_value.value();
     lazy_value.value();
     *lazy_value.value_mut() = 200;
@@ -172,12 +172,12 @@ fn lazy_value_no_drop_if_unused() {
 // Service
 //
 
-// fn is_borrow_eq<T, Q>(borrowed: &Q, expected: &T) -> bool
-//     where   T: PartialEq,
-//             Q: Borrow<T>
-// {
-//     borrowed.borrow() == expected.borrow()
-// }
+fn is_borrow_eq<T, Q>(borrowed: &Q, expected: &T) -> bool
+    where   T: PartialEq,
+            Q: Borrow<T>
+{
+    borrowed.borrow() == expected.borrow()
+}
 
 //
 // Service types

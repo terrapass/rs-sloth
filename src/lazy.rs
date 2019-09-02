@@ -8,6 +8,10 @@ use std::ops::{
     Deref,
     DerefMut
 };
+use std::borrow::{
+    Borrow,
+    BorrowMut
+};
 
 //
 // Constants
@@ -22,7 +26,7 @@ const EXPECT_VALUE_CELL_PTR_NOT_NULL: &str = "value_cell as ptr must not be null
 //
 
 //
-// Lazy<T, Eval>
+// struct Lazy<T, Eval>: Deref<Target = T> + DerefMut + AsRef<T> + Borrow<T> + BorrowMut<T>
 //
 
 /// Represents a value of some type `T`, lazily evaluated using a parameterless
@@ -77,6 +81,10 @@ pub struct Lazy<T, Eval>
     value_cell:     RefCell<Option<T>>
 }
 
+//
+// Trait impls
+//
+
 impl<T, Eval> Deref for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
@@ -118,6 +126,30 @@ impl<T, Eval> AsMut<T> for Lazy<T, Eval>
         self.as_mut_impl()
     }
 }
+
+impl<T, Eval> Borrow<T> for Lazy<T, Eval>
+    where Eval: FnOnce() -> T
+{
+    fn borrow(&self) -> &T {
+        self.init_once();
+
+        self.as_ref_impl()
+    }
+}
+
+impl<T, Eval> BorrowMut<T> for Lazy<T, Eval>
+    where Eval: FnOnce() -> T
+{
+    fn borrow_mut(&mut self) -> &mut T {
+        self.init_once();
+
+        self.as_mut_impl()
+    }
+}
+
+//
+// Methods
+//
 
 impl<T, Eval> Lazy<T, Eval>
     where Eval: FnOnce() -> T
