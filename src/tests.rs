@@ -26,6 +26,80 @@ macro_rules! lazy_all_ref_assert_eq {
 //
 
 #[test]
+fn lazy_init_unwrap() {
+    let lazy_value = Lazy::new(|| 250);
+
+    assert_eq!(lazy_value.unwrap(), 250);
+}
+
+#[test]
+fn lazy_init_value() {
+    let lazy_value = Lazy::new(|| 125);
+
+    assert_eq!(lazy_value.value(), 125);
+}
+
+#[test]
+fn lazy_init_value_ref() {
+    let lazy_value = Lazy::new(|| 45);
+
+    assert_eq!(*lazy_value.value_ref(), 45);
+}
+
+#[test]
+fn lazy_init_value_mut() {
+    let mut lazy_value = Lazy::new(|| 694);
+
+    assert_eq!(*lazy_value.value_mut(), 694);
+}
+
+#[test]
+fn lazy_init_deref() {
+    let lazy_value = Lazy::new(|| -24);
+
+    assert_eq!(*lazy_value, -24);
+}
+
+#[test]
+fn lazy_init_deref_mut() {
+    use std::ops::DerefMut;
+
+    let mut lazy_value = Lazy::new(|| 955);
+
+    assert_eq!(*lazy_value.deref_mut(), 955);
+}
+
+#[test]
+fn lazy_init_as_ref() {
+    let lazy_value = Lazy::new(|| -23);
+
+    assert_eq!(*lazy_value.as_ref(), -23);
+}
+
+#[test]
+fn lazy_init_as_mut() {
+    let mut lazy_value = Lazy::new(|| 55);
+
+    assert_eq!(*lazy_value.as_mut(), 55);
+}
+
+#[test]
+fn lazy_init_borrow() {
+    let lazy_value = Lazy::new(|| 10);
+
+    assert!(is_borrow_eq(&lazy_value, &10));
+}
+
+#[test]
+fn lazy_init_borrow_mut() {
+    let mut lazy_value = Lazy::new(|| -76);
+
+    let value_mut: &i32 = lazy_value.borrow_mut();
+
+    assert_eq!(*value_mut, -76);
+}
+
+#[test]
 fn lazy_int_value_retrieval() {
     let mut lazy_value = Lazy::new(|| 5 + 5);
 
