@@ -9,6 +9,8 @@ fn lazy_int_value_retrieval() {
     let mut lazy_value = Lazy::new(|| 5 + 5);
 
     assert_eq!(*lazy_value, 10);
+    assert_eq!(*lazy_value.as_ref(), 10);
+    assert_eq!(*lazy_value.as_mut(), 10);
     assert_eq!(lazy_value.value(), 10);
     assert_eq!(*lazy_value.value_ref(), 10);
     assert_eq!(*lazy_value.value_mut(), 10);
@@ -21,6 +23,8 @@ fn lazy_int_value_modification_value_mut() {
     *lazy_value.value_mut() = 42;
 
     assert_eq!(*lazy_value, 42);
+    assert_eq!(*lazy_value.as_ref(), 42);
+    assert_eq!(*lazy_value.as_mut(), 42);
     assert_eq!(lazy_value.value(), 42);
     assert_eq!(*lazy_value.value_ref(), 42);
     assert_eq!(*lazy_value.value_mut(), 42);
@@ -33,6 +37,8 @@ fn lazy_int_value_modification_deref_mut() {
     *lazy_value = 42;
 
     assert_eq!(*lazy_value, 42);
+    assert_eq!(*lazy_value.as_ref(), 42);
+    assert_eq!(*lazy_value.as_mut(), 42);
     assert_eq!(lazy_value.value(), 42);
     assert_eq!(*lazy_value.value_ref(), 42);
     assert_eq!(*lazy_value.value_mut(), 42);
@@ -43,6 +49,8 @@ fn lazy_str_value_retrieval() {
     let mut lazy_value = Lazy::new(|| "some str");
 
     assert_eq!(*lazy_value, "some str");
+    assert_eq!(*lazy_value.as_ref(), "some str");
+    assert_eq!(*lazy_value.as_mut(), "some str");
     assert_eq!(lazy_value.value(), "some str");
     assert_eq!(*lazy_value.value_ref(), "some str");
     assert_eq!(*lazy_value.value_mut(), "some str");
@@ -55,6 +63,8 @@ fn lazy_str_value_modification_value_mut() {
     *lazy_value.value_mut() = "new str";
 
     assert_eq!(*lazy_value, "new str");
+    assert_eq!(*lazy_value.as_ref(), "new str");
+    assert_eq!(*lazy_value.as_mut(), "new str");
     assert_eq!(lazy_value.value(), "new str");
     assert_eq!(*lazy_value.value_ref(), "new str");
     assert_eq!(*lazy_value.value_mut(), "new str");
@@ -67,6 +77,8 @@ fn lazy_str_value_modification_deref_mut() {
     *lazy_value = "new str";
 
     assert_eq!(*lazy_value, "new str");
+    assert_eq!(*lazy_value.as_ref(), "new str");
+    assert_eq!(*lazy_value.as_mut(), "new str");
     assert_eq!(lazy_value.value(), "new str");
     assert_eq!(*lazy_value.value_ref(), "new str");
     assert_eq!(*lazy_value.value_mut(), "new str");
@@ -77,6 +89,8 @@ fn lazy_string_value_retrieval() {
     let mut lazy_value = Lazy::new(|| "some string".to_string());
 
     assert_eq!(*lazy_value, "some string".to_string());
+    assert_eq!(*lazy_value.as_ref(), "some string".to_string());
+    assert_eq!(*lazy_value.as_mut(), "some string".to_string());
     assert_eq!(*lazy_value.value_ref(), "some string".to_string());
     assert_eq!(*lazy_value.value_mut(), "some string".to_string());
 }
@@ -88,6 +102,8 @@ fn lazy_string_value_modification_value_mut() {
     *lazy_value.value_mut() = "new string".to_string();
 
     assert_eq!(*lazy_value, "new string".to_string());
+    assert_eq!(*lazy_value.as_ref(), "new string".to_string());
+    assert_eq!(*lazy_value.as_mut(), "new string".to_string());
     assert_eq!(*lazy_value.value_ref(), "new string".to_string());
     assert_eq!(*lazy_value.value_mut(), "new string".to_string());
 }
@@ -99,6 +115,8 @@ fn lazy_string_value_modification_deref_mut() {
     *lazy_value = "new string".to_string();
 
     assert_eq!(*lazy_value, "new string".to_string());
+    assert_eq!(*lazy_value.as_ref(), "new string".to_string());
+    assert_eq!(*lazy_value.as_mut(), "new string".to_string());
     assert_eq!(*lazy_value.value_ref(), "new string".to_string());
     assert_eq!(*lazy_value.value_mut(), "new string".to_string());
 }

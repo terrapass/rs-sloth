@@ -85,14 +85,7 @@ impl<T, Eval> Deref for Lazy<T, Eval>
     fn deref(&self) -> &T {
         self.init_once();
 
-        unsafe {
-            self.value_cell
-                .as_ptr()
-                .as_ref()
-                .expect(EXPECT_VALUE_CELL_PTR_NOT_NULL)
-                .as_ref()
-                .expect(EXPECT_VALUE_CELL_INITIALIZED)
-        }
+        self.as_ref_impl()
     }
 }
 
@@ -102,14 +95,27 @@ impl<T, Eval> DerefMut for Lazy<T, Eval>
     fn deref_mut(&mut self) -> &mut T {
         self.init_once();
 
-        unsafe {
-            self.value_cell
-                .as_ptr()
-                .as_mut()
-                .expect(EXPECT_VALUE_CELL_PTR_NOT_NULL)
-                .as_mut()
-                .expect(EXPECT_VALUE_CELL_INITIALIZED)
-        }
+        self.as_mut_impl()
+    }
+}
+
+impl<T, Eval> AsRef<T> for Lazy<T, Eval>
+    where Eval: FnOnce() -> T
+{
+    fn as_ref(&self) -> &T {
+        self.init_once();
+
+        self.as_ref_impl()
+    }
+}
+
+impl<T, Eval> AsMut<T> for Lazy<T, Eval>
+    where Eval: FnOnce() -> T
+{
+    fn as_mut(&mut self) -> &mut T {
+        self.init_once();
+
+        self.as_mut_impl()
     }
 }
 
@@ -172,6 +178,28 @@ impl<T, Eval> Lazy<T, Eval>
     //
     // Service
     //
+
+    fn as_ref_impl(&self) -> &T {
+        unsafe {
+            self.value_cell
+                .as_ptr()
+                .as_ref()
+                .expect(EXPECT_VALUE_CELL_PTR_NOT_NULL)
+                .as_ref()
+                .expect(EXPECT_VALUE_CELL_INITIALIZED)
+        }
+    }
+
+    fn as_mut_impl(&mut self) -> &mut T {
+        unsafe {
+            self.value_cell
+                .as_ptr()
+                .as_mut()
+                .expect(EXPECT_VALUE_CELL_PTR_NOT_NULL)
+                .as_mut()
+                .expect(EXPECT_VALUE_CELL_INITIALIZED)
+        }
+    }
 
     fn init_once(&self) {
         if self.value_cell.borrow().is_none() {
