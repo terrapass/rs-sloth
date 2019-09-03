@@ -29,35 +29,56 @@ const EXPECT_VALUE_CELL_PTR_NOT_NULL: &str = "value_cell as ptr must not be null
 // struct Lazy<T, Eval>: Deref<Target = T> + DerefMut + AsRef<T> + Borrow<T> + BorrowMut<T>
 //
 
-/// Represents a value of some type `T`, lazily evaluated using a parameterless
+/// Contains a value of some type `T`, lazily evaluated using a parameterless
 /// function or a closure (`FnOnce() -> T`) passed to [`Lazy::new()`](struct.Lazy.html#method.new).
 /// 
-/// The evaluated value may be referenced using [`value_ref()`](struct.Lazy.html#method.value_ref)
-/// or [`value_mut()`](struct.Lazy.html#method.value_mut) methods.
-/// For types implementing `Copy`, a copy of the contained value may be obtained
-/// using [`value()`](struct.Lazy.html#method.value).
+/// This type provides pointer-like interface to the evaluation result,
+/// implementing [`Deref`](https://doc.rust-lang.org/nightly/core/ops/deref/trait.Deref.html),
+/// [`AsRef`](https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html),
+/// [`Borrow`](https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html)
+/// and their `Mut` counterparts.
 /// 
-/// The evaluator function will not be called more than once.
-/// If none of [`value()`](struct.Lazy.html#method.value),
-/// [`value_ref()`](struct.Lazy.html#method.value_ref)
-/// and [`value_mut()`](struct.Lazy.html#method.value_mut) methods are used,
-/// the evaluator function will never be called at all.
+/// The result will be evaluated the first time it is accessed via any of `Lazy`'s methods.
 /// 
-/// # Examples
-/// Lazily converting a string to upper case:
+/// # Accessing evaluated value
+/// 
+/// A `Lazy` value can be acessed in any of the following ways:
 /// ```
 /// use sloth::Lazy;
 /// 
-/// let some_str = "the quick brown fox jumps over the lazy dog";
-/// let lazy_upper_str = Lazy::new(|| some_str.to_uppercase());
+/// let mut lazy_value = Lazy::new(|| 2019);
 /// 
-/// assert_eq!(
-///     *lazy_upper_str.value_ref(),
-///     "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG"
-/// );
+/// let value: i32 = *lazy_value;
+/// let value_ref: &i32 = lazy_value.as_ref();
+/// let value_mut: &mut i32 = lazy_value.as_mut();
+/// 
+/// let value_copy: i32 = lazy_value.value(); // only for types implementing Copy
+/// 
+/// let value: i32 = lazy_value.unwrap(); // consumes lazy_value
 /// ```
-/// Regardless of how many times the value is accessed, the evaluator function
-/// is only called once:
+/// 
+/// Due to [`Deref` coercion](https://doc.rust-lang.org/std/ops/trait.Deref.html#more-on-deref-coercion)
+/// `T`'s methods may be called directly on [`Lazy<T, Eval>`](struct.Lazy.html), while references to `Lazy`
+/// are coerced to references to `T`:
+/// ```
+/// use sloth::Lazy;
+/// 
+/// fn print_string_len(string: &String) {
+///     println!("{} has length {}", string, string.len());
+/// }
+/// 
+/// let mut lazy_string = Lazy::new(|| String::from("lorem "));
+/// 
+/// lazy_string.push_str("ipsum"); // can call T's methods
+/// 
+/// print_string_len(&lazy_string); // can pass as &T function param
+///
+/// ```
+/// 
+/// # Laziness
+/// 
+/// The evaluator function will not be called more than once,
+/// regardless of how many times the value is accessed:
 /// ```
 /// use sloth::Lazy;
 /// 
@@ -68,12 +89,15 @@ const EXPECT_VALUE_CELL_PTR_NOT_NULL: &str = "value_cell as ptr must not be null
 ///     25
 /// });
 /// 
-/// assert_eq!(lazy_value.value(), 25);
+/// assert_eq!(*lazy_value, 25);
 /// 
-/// let another_value = lazy_value.value() + lazy_value.value();
+/// let another_value = *lazy_value + *lazy_value;
 /// 
 /// assert_eq!(evaluator_called_times, 1);
 /// ```
+/// 
+/// If a `Lazy` value is never dereferenced and none of its methods are called,
+/// its evaluator function will not be invoked at all.
 pub struct Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
@@ -90,6 +114,10 @@ impl<T, Eval> Deref for Lazy<T, Eval>
 {
     type Target = T;
 
+    /// Immutable dereference, allowing access to the contained value.
+    /// 
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
     fn deref(&self) -> &T {
         self.as_ref_impl()
     }
@@ -98,6 +126,10 @@ impl<T, Eval> Deref for Lazy<T, Eval>
 impl<T, Eval> DerefMut for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
+    /// Mutable dereference, allowing access to the contained value.
+    /// 
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
     fn deref_mut(&mut self) -> &mut T {
         self.as_mut_impl()
     }
@@ -106,6 +138,10 @@ impl<T, Eval> DerefMut for Lazy<T, Eval>
 impl<T, Eval> AsRef<T> for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
+    /// Immutably borrows the evaluation result.
+    /// 
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
     fn as_ref(&self) -> &T {
         self.as_ref_impl()
     }
@@ -114,6 +150,10 @@ impl<T, Eval> AsRef<T> for Lazy<T, Eval>
 impl<T, Eval> AsMut<T> for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
+    /// Mutably borrows the evaluation result.
+    /// 
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
     fn as_mut(&mut self) -> &mut T {
         self.as_mut_impl()
     }
@@ -122,6 +162,10 @@ impl<T, Eval> AsMut<T> for Lazy<T, Eval>
 impl<T, Eval> Borrow<T> for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
+    /// Immutably borrows the evaluation result.
+    /// 
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
     fn borrow(&self) -> &T {
         self.as_ref_impl()
     }
@@ -130,6 +174,10 @@ impl<T, Eval> Borrow<T> for Lazy<T, Eval>
 impl<T, Eval> BorrowMut<T> for Lazy<T, Eval>
     where Eval: FnOnce() -> T
 {
+    /// Mutably borrows the evaluation result.
+    /// 
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
     fn borrow_mut(&mut self) -> &mut T {
         self.as_mut_impl()
     }
@@ -149,11 +197,8 @@ impl<T, Eval> Lazy<T, Eval>
     /// Constructs a lazy `T` instance, whose value, if needed, will later be
     /// obtained from `evaluator` and cached.
     /// 
-    /// `evaluator` will be invoked only the first time any one of
-    /// [`value()`](struct.Lazy.html#method.value),
-    /// [`value_ref()`](struct.Lazy.html#method.value_ref)
-    /// or [`value_mut()`](struct.Lazy.html#method.value_mut)
-    /// methods is called.
+    /// `evaluator` will be invoked only the first time this instance
+    /// is dereferenced or one of its methods is invoked.
     pub fn new(evaluator: Eval) -> Self {
         Self{
             evaluator_cell: Cell::new(Some(evaluator)),
@@ -163,8 +208,10 @@ impl<T, Eval> Lazy<T, Eval>
 
     /// Immutably borrows the evaluation result.
     /// 
-    /// This will invoke evaluator function if none of the `value`* methods
-    /// were called earlier.
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
+    /// 
+    /// **`value_ref()` will be removed in sloth 0.3.0. [`as_ref()` or immutable * dereference](struct.Lazy.html#implementations) should be used instead.**
     #[must_use]
     #[deprecated(since = "0.2.0", note = "will be removed in sloth 0.3.0; please use as_ref() or * deref operator instead")]
     pub fn value_ref(&self) -> Ref<'_, T> {
@@ -181,8 +228,10 @@ impl<T, Eval> Lazy<T, Eval>
 
     /// Mutably borrows the evaluation result.
     /// 
-    /// This will invoke evaluator function if none of the `value`* methods
-    /// were called earlier.
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
+    /// 
+    /// **`value_mut()` will be removed in sloth 0.3.0. [`as_mut()` or mutable * dereference](struct.Lazy.html#implementations) should be used instead.**
     #[must_use]
     #[deprecated(since = "0.2.0", note = "will be removed in sloth 0.3.0; please use as_mut() or * deref operator instead")]
     pub fn value_mut(&mut self) -> RefMut<'_, T> {
@@ -197,10 +246,10 @@ impl<T, Eval> Lazy<T, Eval>
         )
     }
 
-    /// Consumes `Lazy` instance and extracts the evaluation result value.
+    /// Consumes this [`Lazy<T, Eval>`](struct.Lazy.html) instance and extracts the evaluation result value.
     ///
-    /// This will invoke evaluator function if none of the `value`* methods
-    /// were called earlier.
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
     #[must_use]
     pub fn unwrap(self) -> T {
         self.init_once();
@@ -259,8 +308,8 @@ impl<T, Eval> Lazy<T, Eval>
 {
     /// Returns a copy of the evaluation result.
     /// 
-    /// This will invoke evaluator function if none of the `value`* methods
-    /// were called earlier.
+    /// This will invoke evaluator function if none of the methods
+    /// or `*` deref operator were previously used.
     #[must_use]
     pub fn value(&self) -> T {
         self.init_once();
